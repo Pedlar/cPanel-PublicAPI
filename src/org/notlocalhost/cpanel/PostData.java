@@ -1,5 +1,6 @@
 package org.notlocalhost.cpanel;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PostData {
@@ -8,10 +9,12 @@ public class PostData {
     private Map<String, String> _data;
     
     public PostData() {
+        _data = new HashMap<String, String>();
     }
     public PostData(String module, String function) {
         _module = module;
         _function = function;
+        _data = new HashMap<String, String>();
     }
     public PostData putString(String key, String value) {
         _data.put(key, value);
