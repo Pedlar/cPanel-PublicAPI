@@ -61,7 +61,7 @@ class Api {
         httpCookie = "";
     }
     
-    public void login(String username, String password, String domain) {
+    public boolean login(String username, String password, String domain) {
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
         nameValuePairs.add(new BasicNameValuePair("user", username));
         nameValuePairs.add(new BasicNameValuePair("pass", password));
@@ -80,52 +80,55 @@ class Api {
             httpCookie = matcher.group().replaceAll("\\/", "");
             logged_in = true;
             session_id = true;
-            Log.d("QuickInstall", httpCookie);
+            //Log.d("cPanel-PublicAPI", httpCookie);
         } else {
             Header[] headers = response.getHeaders("set-cookie");
             for(Header header : headers) {
-                Log.d("QuickInstall", header.getName() + ": " + header.getValue());
+                //Log.d("cPanel-PublicAPI", header.getName() + ": " + header.getValue());
                 if(header.getValue().contains("session=")) {
                    httpCookie = header.getValue();
                    logged_in = true;
                 }
             }
         }
+        return logged_in;
     }
     
-    private HttpResponse postData(String domain, String query, List<NameValuePair> nameValuePairs) {
+    public HttpResponse postData(String domain, String query, List<NameValuePair> nameValuePairs) {
         // Create a new HttpClient and Post Header
-        HttpPost httppost = new HttpPost("http://" + domain + ":2082/" + query);
+        HttpPost httppost = new HttpPost("http://" + domain + ":2082/" + (session_id ? httpCookie : "") + query);
         try {
-            if(httpCookie.length() > 0)
+            if(httpCookie.length() > 0 && !session_id)
                 httppost.setHeader("Cookie", httpCookie);
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             HttpResponse response = httpClient.execute(httppost);
             return response;
         } catch (ClientProtocolException e) {
             // TODO Auto-generated catch block
-            Log.e("QuickInstall", "Caught Exception");
+            //Log.e("cPanel-PublicAPI", "Caught Exception");
             e.printStackTrace();
         } catch (IOException e) {
-            Log.e("QuickInstall", "Caught Exception");
+            //Log.e("cPanel-PublicAPI", "Caught Exception");
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return null;
     }
     
-    private HttpResponse postGet(String domain, String query) {
+    public HttpResponse postGet(String domain, String query) {
         // Create a new HttpClient and Post Header
-        HttpGet httpget = new HttpGet("http://" + domain + ":2082/" + query);
+        HttpGet httpget = new HttpGet("http://" + domain + ":2082/" + (session_id ? httpCookie : "") + query);
         try {
+            if(httpCookie.length() > 0 && !session_id)
+                httpget.setHeader("Cookie", httpCookie);
             HttpResponse response = httpClient.execute(httpget);
             return response;
         } catch (ClientProtocolException e) {
             // TODO Auto-generated catch block
-            Log.e("QuickInstall", "Caught Exception");
+            //Log.e("cPanel-PublicAPI", "Caught Exception");
             e.printStackTrace();
         } catch (IOException e) {
-            Log.e("QuickInstall", "Caught Exception");
+            //Log.e("cPanel-PublicAPI", "Caught Exception");
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -137,7 +140,6 @@ class Api {
     }
     
     public class MyRedirectHandler extends DefaultRedirectHandler {
-
         public URI lastRedirectedUri;
 
         @Override
@@ -154,19 +156,5 @@ class Api {
 
             return lastRedirectedUri;
         }
-
-    }
-
-    public String getAppList(String domain) {
-        HttpResponse response = postGet(domain, "/" + httpCookie + "/json-api/cpanel?cpanel_jsonapi_module=QuickInstall&cpanel_jsonapi_func=manage_apps&cpanel_jsonapi_apiversion=2&names&nocache=1");
-        
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        try {
-            response.getEntity().writeTo(byteStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String body = new String(byteStream.toString());
-        return body;
     }
 }
