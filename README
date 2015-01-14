@@ -2,19 +2,21 @@ cPanel Public API Java Library
 
 Example:
 
-package test.cpane.api;
-import org.notlocalhost.cPanel;
-import org.notlocalhost.PostData;
+package com.variacode.labs.pedlar.cpanel;
+import java.util.HashMap;
+import java.util.Map;
 
+public class TestMain {
 
-public class Main {
-    cPanel _cPanel;
-    public void main {
-        _cPanel = cPanel.getInstance("domain.com", "username", "password");
-        _cPanel.login();
-        PostData data = new PostData();
-        data.putString("module", "Email");
-        data.putString("function", "listpopswithdisk");
-        String json = _cPanel.api2_get_request(data); // Returns the JSON string from the API can be used with Javas JSON library.
-    }
+    public static void main(String[] args) {
+		cPanel _cPanel;
+		_cPanel = cPanel.getInstance("domainwithcpanel.cl", "username", "password");
+		_cPanel.login();
+		Map<String,String> params = new HashMap<>();
+		params.put("email", "miguelito");
+		params.put("password", "3475tf87idiu");
+		params.put("quota", "250");//create new pop email account
+		String json = _cPanel.api2_get_request("Email","addpop",params); // Returns the JSON string from the API can be used with Javas JSON library.
+	}
+
 }
