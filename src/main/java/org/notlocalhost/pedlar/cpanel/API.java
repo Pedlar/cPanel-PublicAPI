@@ -1,4 +1,4 @@
-package com.variacode.labs.pedlar.cpanel;
+package org.notlocalhost.pedlar.cpanel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,11 +29,11 @@ import org.apache.http.protocol.HttpContext;
 
 public class API {
 
-    static private HttpClient httpClient;
-    static private boolean logged_in;
-    static private String httpCookie;
-    static private MyRedirectHandler handler;
-    static private boolean session_id = false;
+    private static HttpClient httpClient;
+    private static boolean loggedIn;
+    private static String httpCookie;
+    private static MyRedirectHandler handler;
+    private static boolean sessionId = false;
 
     public API() {
         httpClient = new DefaultHttpClient();
@@ -41,16 +41,16 @@ public class API {
         httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
         handler = new MyRedirectHandler();
         ((AbstractHttpClient) httpClient).setRedirectHandler(handler);
-        logged_in = false;
+        loggedIn = false;
         httpCookie = "";
     }
 
     public boolean login(String username, String password, String domain) {
-        List<NameValuePair> nameValuePairs = new ArrayList<>(2);
+        List<NameValuePair> nameValuePairs = new ArrayList<>();
         nameValuePairs.add(new BasicNameValuePair("user", username));
         nameValuePairs.add(new BasicNameValuePair("pass", password));
         HttpResponse response = postData(domain, "login/", nameValuePairs);
-
+        
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 
         try {
@@ -63,30 +63,29 @@ public class API {
         Matcher matcher = Pattern.compile("=/(.+)/front").matcher(body);
         if (matcher.find()) {
             httpCookie = matcher.group().replaceAll("\\/", "").replaceAll("front", "").replaceAll("=", "");
-            logged_in = true;
-            session_id = true;
+            loggedIn = true;
+            sessionId = true;
         } else {
             Header[] headers = response.getHeaders("set-cookie");
             for (Header header : headers) {
                 if (header.getValue().contains("session=")) {
                     httpCookie = header.getValue();
-                    logged_in = true;
+                    loggedIn = true;
                 }
             }
         }
-        return logged_in;
+        return loggedIn;
     }
 
     public HttpResponse postData(String domain, String query, List<NameValuePair> nameValuePairs) {
         // Create a new HttpClient and Post Header
-        HttpPost httppost = new HttpPost("http://" + domain + ":2082/" + (session_id ? httpCookie : "") + query);
+        HttpPost httppost = new HttpPost("http://" + domain + ":2082/" + (sessionId ? httpCookie : "") + query);
         try {
-            if (httpCookie.length() > 0 && !session_id) {
+            if (httpCookie.length() > 0 && !sessionId) {
                 httppost.setHeader("Cookie", httpCookie);
             }
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-            HttpResponse response = httpClient.execute(httppost);
-            return response;
+            return httpClient.execute(httppost);
         } catch (ClientProtocolException e) {
             Logger.getLogger(API.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException e) {
@@ -97,13 +96,12 @@ public class API {
 
     public HttpResponse postGet(String domain, String query) {
         // Create a new HttpClient and Post Header
-        HttpGet httpget = new HttpGet("http://" + domain + ":2082/" + (session_id ? httpCookie : "") + query);
+        HttpGet httpget = new HttpGet("http://" + domain + ":2082/" + (sessionId ? httpCookie : "") + query);
         try {
-            if (httpCookie.length() > 0 && !session_id) {
+            if (httpCookie.length() > 0 && !sessionId) {
                 httpget.setHeader("Cookie", httpCookie);
             }
-            HttpResponse response = httpClient.execute(httpget);
-            return response;
+            return httpClient.execute(httpget);
         } catch (ClientProtocolException e) {
             Logger.getLogger(API.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException e) {
@@ -113,25 +111,17 @@ public class API {
     }
 
     public boolean isLoggedIn() {
-        return logged_in;
+        return loggedIn;
     }
 
     public class MyRedirectHandler extends DefaultRedirectHandler {
 
-        public URI lastRedirectedUri;
-
-        @Override
-        public boolean isRedirectRequested(HttpResponse response, HttpContext context) {
-
-            return super.isRedirectRequested(response, context);
-        }
+        private URI lastRedirectedUri;
 
         @Override
         public URI getLocationURI(HttpResponse response, HttpContext context)
                 throws ProtocolException {
-
             lastRedirectedUri = super.getLocationURI(response, context);
-
             return lastRedirectedUri;
         }
     }

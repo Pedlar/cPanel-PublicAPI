@@ -1,4 +1,4 @@
-package com.variacode.labs.pedlar.cpanel;
+package org.notlocalhost.pedlar.cpanel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -8,19 +8,19 @@ import java.util.logging.Logger;
 
 import org.apache.http.HttpResponse;
 
-public class cPanel {
+public class CPanel {
 
-    private String _domain;
-    private String _user;
-    private String _password;
-    private static cPanel _this;
-    private static API _cAPI;
+    private String domain;
+    private String user;
+    private String password;
+    private static CPanel _this;
+    private final API cAPI;
 
-    private cPanel(String domain, String user, String password) {
-        _cAPI = new API();
-        _domain = domain;
-        _user = user;
-        _password = password;
+    private CPanel(String domain, String user, String password) {
+        this.cAPI = new API();
+        this.domain = domain;
+        this.user = user;
+        this.password = password;
     }
 
     /**
@@ -30,9 +30,9 @@ public class cPanel {
      * @param password
      * @return
      */
-    public static cPanel getInstance(String domain, String user, String password) {
+    public static CPanel getInstance(String domain, String user, String password) {
         if (_this == null) {
-            _this = new cPanel(domain, user, password);
+            _this = new CPanel(domain, user, password);
         }
         return _this;
     }
@@ -44,8 +44,8 @@ public class cPanel {
      * @param password
      * @return
      */
-    public static cPanel newInstance(String domain, String user, String password) {
-        _this = new cPanel(domain, user, password);
+    public static CPanel newInstance(String domain, String user, String password) {
+        _this = new CPanel(domain, user, password);
         return _this;
     }
     /* End Constructors */
@@ -57,7 +57,7 @@ public class cPanel {
      *
      */
     public void setUsername(String username) {
-        _user = username;
+        this.user = username;
     }
 
     /**
@@ -66,7 +66,7 @@ public class cPanel {
      *
      */
     public void setPassword(String password) {
-        _password = password;
+        this.password = password;
     }
 
     /**
@@ -75,7 +75,7 @@ public class cPanel {
      *
      */
     public void setDomain(String domain) {
-        _domain = domain;
+        this.domain = domain;
     }
 
     /**
@@ -83,7 +83,7 @@ public class cPanel {
      *
      */
     public String getUsername() {
-        return _user;
+        return this.user;
     }
 
     /**
@@ -91,7 +91,7 @@ public class cPanel {
      *
      */
     public String getPassword() {
-        return _password;
+        return this.password;
     }
 
     /**
@@ -99,7 +99,7 @@ public class cPanel {
      *
      */
     public String getDomain() {
-        return _domain;
+        return this.domain;
     }
     /* End Setters/Getters */
 
@@ -109,7 +109,7 @@ public class cPanel {
      * @return
      */
     public boolean login() {
-        return _cAPI.login(_user, _password, _domain);
+        return this.cAPI.login(this.user, this.password, this.domain);
     }
 
     /**
@@ -121,7 +121,7 @@ public class cPanel {
      * @return
      */
     public boolean login(String username, String password) {
-        return _cAPI.login(username, password, _domain);
+        return this.cAPI.login(username, password, this.domain);
     }
 
     /**
@@ -134,7 +134,7 @@ public class cPanel {
      * @return
      */
     public boolean login(String username, String password, String domain) {
-        return _cAPI.login(username, password, _domain);
+        return this.cAPI.login(username, password, domain);
     }
 
     /**
@@ -144,12 +144,12 @@ public class cPanel {
      * @param function
      * @return
      */
-    public String api2_get_request(String module, String function, Map<String, String> params) {
+    public String api2GetRequest(String module, String function, Map<String, String> params) {
         String prms = "";
         for (Map.Entry<String, String> e : params.entrySet()) {
             prms = prms + "&" + e.getKey() + "=" + e.getValue();
         }
-        HttpResponse response = _cAPI.postGet(_domain, "/json-api/cpanel?cpanel_jsonapi_module=" + module + "&cpanel_jsonapi_func=" + function + "&cpanel_jsonapi_apiversion=2&nocache=1" + prms);
+        HttpResponse response = this.cAPI.postGet(this.domain, "/json-api/cpanel?cpanel_jsonapi_module=" + module + "&cpanel_jsonapi_func=" + function + "&cpanel_jsonapi_apiversion=2&nocache=1" + prms);
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             response.getEntity().writeTo(byteStream);
